@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { ProgressBar } from "@/components/ProgressBar";
 import ReactQueryProvider from "./providers/ReactQueryProvider";
 import { Suspense } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({
             <ProgressBar />
           </Suspense>
           <Toaster />
+          <SpeedInsights/>
         </ReactQueryProvider>
       </body>
     </html>

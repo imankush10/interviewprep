@@ -26,6 +26,9 @@ importers:
       '@vapi-ai/web':
         specifier: ^2.2.5
         version: 2.2.5
+      '@vercel/speed-insights':
+        specifier: ^1.2.0
+        version: 1.2.0(next@15.3.0(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       ai:
         specifier: ^4.3.9
         version: 4.3.9(react@19.1.0)(zod@3.24.3)
@@ -1086,6 +1089,29 @@ packages:
 
   '@vapi-ai/web@2.2.5':
     resolution: {integrity: sha512-KaBVPEr9m054QFj4570HWOMJYgUB86evBWR2Yc5PN63lers1x3TFlSJCKQO5Qeoif0tJ4t5AVRrfF9KlUaz3Sg==}
+
+  '@vercel/speed-insights@1.2.0':
+    resolution: {integrity: sha512-y9GVzrUJ2xmgtQlzFP2KhVRoCglwfRQgjyfY607aU0hh0Un6d0OUyrJkjuAlsV18qR4zfoFPs/BiIj9YDS6Wzw==}
+    peerDependencies:
+      '@sveltejs/kit': ^1 || ^2
+      next: '>= 13'
+      react: ^18 || ^19 || ^19.0.0-rc
+      svelte: '>= 4'
+      vue: ^3
+      vue-router: ^4
+    peerDependenciesMeta:
+      '@sveltejs/kit':
+        optional: true
+      next:
+        optional: true
+      react:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+      vue-router:
+        optional: true
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -3764,6 +3790,11 @@ snapshots:
     dependencies:
       '@daily-co/daily-js': 0.75.2
       events: 3.3.0
+
+  '@vercel/speed-insights@1.2.0(next@15.3.0(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)':
+    optionalDependencies:
+      next: 15.3.0(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
 
   abort-controller@3.0.0:
     dependencies:
