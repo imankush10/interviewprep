@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import Loader from "@/components/Loader";
 import dayjs from "dayjs";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
+import SkeletonFeedbackPage from "@/components/skeletons/SkeletonFeedbackPage";
 
 export default function FeedbackPage() {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +45,8 @@ export default function FeedbackPage() {
   });
 
   // Handle loading and error states
-  if (userLoading || interviewLoading || feedbackLoading) return <Loader />;
+  if (userLoading || interviewLoading || feedbackLoading)
+    return <SkeletonFeedbackPage />;
   if (!user) {
     router.replace("/sign-in");
     return null;

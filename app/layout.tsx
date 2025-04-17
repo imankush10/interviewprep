@@ -1,10 +1,8 @@
 import { Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { ProgressBar } from "@/components/ProgressBar";
 import ReactQueryProvider from "./providers/ReactQueryProvider";
-import { Suspense } from "react";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
@@ -26,11 +24,8 @@ export default function RootLayout({
       <body className={`${monaSans.className} antialiased pattern`}>
         <ReactQueryProvider>
           {children}
-          <Suspense>
-            <ProgressBar />
-          </Suspense>
           <Toaster />
-          <SpeedInsights/>
+          <SpeedInsights />
         </ReactQueryProvider>
       </body>
     </html>

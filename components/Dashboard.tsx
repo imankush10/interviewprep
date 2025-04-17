@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import SkeletonInterviewCard from "./skeletons/SkeletonInterviewCard";
 
 function fetchUserInterviews() {
   return fetch("/api/user-interviews").then((res) => res.json());
@@ -66,10 +67,17 @@ export default function Dashboard() {
         <h2>Your Interviews</h2>
         <div className="interviews-section">
           {loadingUser ? (
-            <p>Loading...</p>
+            <div className="interviews-section">
+            <SkeletonInterviewCard />
+            <SkeletonInterviewCard />
+            </div>
           ) : hasPastInterviews ? (
             userInterviews.map((interview: any) => (
-              <InterviewCard {...interview} key={interview.id} feedback={feedbackMap[interview.id]}/>
+              <InterviewCard
+                {...interview}
+                key={interview.id}
+                feedback={feedbackMap[interview.id]}
+              />
             ))
           ) : (
             <p>You haven&apos;t taken any interviews yet</p>
