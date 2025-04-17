@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ProgressBar } from "@/components/ProgressBar";
 import ReactQueryProvider from "./providers/ReactQueryProvider";
+import { Suspense } from "react";
 
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
@@ -24,7 +25,9 @@ export default function RootLayout({
       <body className={`${monaSans.className} antialiased pattern`}>
         <ReactQueryProvider>
           {children}
-          <ProgressBar />
+          <Suspense>
+            <ProgressBar />
+          </Suspense>
           <Toaster />
         </ReactQueryProvider>
       </body>
