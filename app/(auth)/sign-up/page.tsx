@@ -1,12 +1,12 @@
 "use client";
 import AuthForm from "@/components/AuthForm";
 import Loader from "@/components/Loader";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
 const SignUp = () => {
-  const { data: user, isLoading } = useCurrentUser();
+  const { data: user, isLoading } = useIsAuthenticated();
   const router = useRouter();
 
   useEffect(() => {

@@ -7,16 +7,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
 
 export default function FeedbackPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  // Fetch current user
-  const { data: user, isLoading: userLoading } = useCurrentUser();
+  const { data: user, isLoading: userLoading } = useIsAuthenticated();
 
-  // Fetch interview
   const {
     data: interview,
     isLoading: interviewLoading,

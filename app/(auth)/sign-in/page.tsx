@@ -1,25 +1,26 @@
 "use client";
 import AuthForm from "@/components/AuthForm";
 import Loader from "@/components/Loader";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
 const SignIn = () => {
-  const { data: user, isLoading } = useCurrentUser();
+  const { data: authStatus, isLoading: authChecking } = useIsAuthenticated();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    if (authStatus?.authenticated) {
       router.replace("/");
     }
-  }, [user, router]);
+  }, [authStatus, router]);
 
-  if (isLoading) return <Loader />;
+  if (authChecking) return <Loader />;
 
-  if (!user) {
+  if (authStatus && !authStatus.authenticated) {
     return <AuthForm type="sign-in" />;
   }
+
   return <Loader />;
 };
 

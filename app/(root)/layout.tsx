@@ -22,7 +22,7 @@ const InnerRootLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="root-layout">
-      <ClientNavigation userInitial={user.name[0]} userName={user.name} />
+      <ClientNavigation userInitial={user.name[0]} />
       {children}
     </div>
   );

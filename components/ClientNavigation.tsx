@@ -1,17 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { logout } from "@/lib/actions/auth.action";
 import Image from "next/image";
 import Link from "next/link";
 import LogoutButton from "./Logout";
 
 interface ClientNavigationProps {
   userInitial: string;
-  userName: string;
 }
 
-const ClientNavigation = ({ userInitial, userName }: ClientNavigationProps) => {
+const ClientNavigation = ({ userInitial }: ClientNavigationProps) => {
   return (
     <nav className="flex items-center gap-2 justify-between">
       <Link href="/" className="flex items-center gap-2">
