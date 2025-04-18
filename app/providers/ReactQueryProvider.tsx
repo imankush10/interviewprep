@@ -1,6 +1,6 @@
 "use client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function ReactQueryProvider({
   children,
@@ -15,16 +15,6 @@ export default function ReactQueryProvider({
         },
       })
   );
-  useEffect(() => {
-    queryClient.prefetchQuery({
-      queryKey: ["is-authenticated"],
-      queryFn: async () => {
-        const res = await fetch("/api/is-authenticated");
-        if (!res.ok) return { authenticated: false };
-        return await res.json();
-      },
-    });
-  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
