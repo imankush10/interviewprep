@@ -1,21 +1,21 @@
 "use client";
+import { useLogout } from "@/hooks/useLogout";
+import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 
 export default function LogoutButton() {
-  const queryClient = useQueryClient();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await fetch("/api/logout", { method: "POST" });
-    queryClient.clear();
-    router.replace("/sign-in");
-  };
+  const { logout, loading } = useLogout();
 
   return (
-    <Button className="cursor-pointer btn-secondary" onClick={handleLogout}>
-      Log out
-    </Button>
+    <>
+      {loading && <Loader />}
+      <Button
+        className="cursor-pointer btn-secondary"
+        onClick={logout}
+        disabled={loading}
+      >
+        Log out
+      </Button>
+    </>
   );
 }

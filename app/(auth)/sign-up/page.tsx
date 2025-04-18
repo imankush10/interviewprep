@@ -3,7 +3,7 @@ import AuthForm from "@/components/AuthForm";
 import Loader from "@/components/Loader";
 import { useIsAuthenticated } from "@/hooks/useIsAuthenticated";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, {useEffect } from "react";
 
 const SignUp = () => {
   const { data: user, isLoading } = useIsAuthenticated();
