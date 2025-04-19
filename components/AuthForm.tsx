@@ -63,7 +63,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           return;
         }
 
-        toast.success("Account created successfull, you can now sign in");
+        toast.success("Account created successfully, you can now sign in");
         router.push("/sign-in");
       } else {
         const { email, password } = values;
@@ -79,10 +79,16 @@ const AuthForm = ({ type }: { type: FormType }) => {
         }
 
         await signIn({ idToken, email });
-        toast.success("Sign in successfull");
+        toast.success("Sign in successful");
 
+        // Invalidate both authentication-related queries
         await queryClient.invalidateQueries({ queryKey: ["current-user"] });
-        router.push("/");
+        await queryClient.invalidateQueries({ queryKey: ["is-authenticated"] });
+
+        // Add a small delay before redirecting to ensure cache is updated
+        setTimeout(() => {
+          router.push("/");
+        }, 100);
       }
     } catch (error) {
       console.log(error);
@@ -99,10 +105,17 @@ const AuthForm = ({ type }: { type: FormType }) => {
       const user = result.user;
       const idToken = await user.getIdToken();
       await signIn({ idToken, email: user.email! });
-      await queryClient.invalidateQueries({ queryKey: ["current-user"] });
 
-      toast.success("Signed with Google!");
-      router.push("/");
+      // Invalidate both authentication-related queries
+      await queryClient.invalidateQueries({ queryKey: ["current-user"] });
+      await queryClient.invalidateQueries({ queryKey: ["is-authenticated"] });
+
+      toast.success("Signed in with Google!");
+
+      // Add a small delay before redirecting
+      setTimeout(() => {
+        router.push("/");
+      }, 100);
     } catch (error: any) {
       toast.error(error?.message);
       console.log(error);
