@@ -51,6 +51,9 @@ export default function ClientNavigation({ user }: ModernNavbarProps) {
     { href: "/interview", label: "Interview", icon: Brain },
   ];
 
+  // Conditional logo href based on user authentication
+  const logoHref = user ? "https://onlevel-app.vercel.app/" : "https://onlevel.vercel.app/";
+
   return (
     <>
       {/* Spacer for fixed navbar */}
@@ -65,13 +68,13 @@ export default function ClientNavigation({ user }: ModernNavbarProps) {
         {/* Main navbar container */}
         <div className="relative backdrop-blur-md rounded-md">
           <div className="flex h-16 items-center justify-between px-6">
-            {/* Left side - Logo */}
+            {/* Left side - Logo with conditional href */}
             <motion.div
               className="flex items-center space-x-3"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <Link href="https://onlevel.vercel.app/" className="flex items-center space-x-3">
+              <Link href={logoHref} className="flex items-center space-x-3">
                 <div className="rounded-md p-1.5">
                   <Image src="/logo.png" width={52} height={52} alt="logo" />
                 </div>
