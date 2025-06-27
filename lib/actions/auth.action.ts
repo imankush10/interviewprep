@@ -42,27 +42,32 @@ export async function signUp(params: SignUpParams) {
 export async function signIn(params: SignInParams) {
   const { email, idToken } = params;
   try {
-    const userRecord = await auth.getUserByEmail(email);
-    if (!userRecord) {
-      return {
-        success: false,
-        message: "User does not exist. Create an account.",
-      };
-    }
+    // Verify the ID token first (this is faster than getUserByEmail)
+    const decodedToken = await auth.verifyIdToken(idToken);
+    
+    // Check if user exists in Firestore
     const firestoreUser = await db
       .collection("users")
-      .doc(userRecord.uid)
+      .doc(decodedToken.uid)
       .get();
+    
     if (!firestoreUser.exists) {
+      // Create user document if it doesn't exist
       await db
         .collection("users")
-        .doc(userRecord.uid)
+        .doc(decodedToken.uid)
         .set({
-          name: userRecord.displayName ?? "No name",
-          email: userRecord.email,
+          name: decodedToken.name ?? "No name",
+          email: decodedToken.email,
         });
     }
+    
     await setSessionCookie(idToken);
+    
+    return {
+      success: true,
+      message: "Sign in successful",
+    };
   } catch (error: any) {
     console.error(error);
     return {
@@ -71,6 +76,7 @@ export async function signIn(params: SignInParams) {
     };
   }
 }
+
 
 export async function setSessionCookie(idToken: string) {
   const cookieStore = await cookies();

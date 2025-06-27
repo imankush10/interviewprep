@@ -20,46 +20,9 @@ import {
 import { auth } from "@/firebase/client";
 import { signIn, signUp } from "@/lib/actions/auth.action";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 // Add the same animated background from your landing page
-function AuthAnimatedBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      <motion.div
-        className="absolute -inset-10 opacity-30"
-        animate={{
-          background: [
-            "radial-gradient(600px circle at 0% 0%, rgba(120, 119, 198, 0.2), transparent 50%)",
-            "radial-gradient(600px circle at 100% 100%, rgba(120, 119, 198, 0.2), transparent 50%)",
-            "radial-gradient(600px circle at 50% 50%, rgba(120, 119, 198, 0.2), transparent 50%)",
-            "radial-gradient(600px circle at 0% 0%, rgba(120, 119, 198, 0.2), transparent 50%)",
-          ],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-      />
-      <motion.div
-        className="absolute -inset-10 opacity-20"
-        animate={{
-          background: [
-            "radial-gradient(800px circle at 100% 0%, rgba(76, 29, 149, 0.3), transparent 50%)",
-            "radial-gradient(800px circle at 0% 100%, rgba(76, 29, 149, 0.3), transparent 50%)",
-            "radial-gradient(800px circle at 50% 0%, rgba(76, 29, 149, 0.3), transparent 50%)",
-            "radial-gradient(800px circle at 100% 0%, rgba(76, 29, 149, 0.3), transparent 50%)",
-          ],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-      />
-    </div>
-  );
-}
 
 const authFormSchema = (type: FormType) =>
   z.object({
@@ -73,6 +36,15 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const formSchema = authFormSchema(type);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+
+  useEffect(() => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: "select_account",
+    });
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -124,13 +96,11 @@ const AuthForm = ({ type }: { type: FormType }) => {
         toast.success("Sign in successful");
 
         // Invalidate both authentication-related queries
-        await queryClient.invalidateQueries({ queryKey: ["current-user"] });
-        await queryClient.invalidateQueries({ queryKey: ["is-authenticated"] });
-
-        // Add a small delay before redirecting to ensure cache is updated
-        setTimeout(() => {
-          router.push("/");
-        }, 100);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["current-user"] }),
+          queryClient.invalidateQueries({ queryKey: ["is-authenticated"] }),
+        ]);
+        router.push("/");
       }
     } catch (error) {
       console.log(error);
@@ -139,35 +109,56 @@ const AuthForm = ({ type }: { type: FormType }) => {
   }
   async function handleGoogleSignin() {
     try {
+      setIsGoogleLoading(true);
+      setShowAuthOverlay(true);
+
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({
         prompt: "select_account",
       });
+
+      toast.loading("Opening Google sign-in...", { id: "google-signin" });
+
       const result = await signInWithPopup(auth, provider);
+
+      toast.loading("Completing sign-in...", { id: "google-signin" });
+
       const user = result.user;
       const idToken = await user.getIdToken();
-      await signIn({ idToken, email: user.email! });
 
-      // Invalidate both authentication-related queries
-      await queryClient.invalidateQueries({ queryKey: ["current-user"] });
-      await queryClient.invalidateQueries({ queryKey: ["is-authenticated"] });
+      // Start both operations in parallel for better performance
+      const [signInResult] = await Promise.all([
+        signIn({ idToken, email: user.email! }),
+        // Preemptively invalidate queries while sign-in is happening
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["current-user"] }),
+          queryClient.invalidateQueries({ queryKey: ["is-authenticated"] }),
+        ]),
+      ]);
 
-      toast.success("Signed in with Google!");
+      if (!signInResult?.success) {
+        toast.error(signInResult?.message || "Sign in failed", {
+          id: "google-signin",
+        });
+        return;
+      }
 
-      // Add a small delay before redirecting
-      setTimeout(() => {
-        router.push("/");
-      }, 100);
+      toast.success("Signed in with Google!", { id: "google-signin" });
+
+      // Immediate redirect without delay
+      router.push("/");
     } catch (error: any) {
-      toast.error(error?.message);
+      toast.error(error?.message || "Sign in failed", { id: "google-signin" });
       console.log(error);
+    } finally {
+      setIsGoogleLoading(false);
+      setShowAuthOverlay(false);
     }
   }
 
   return (
     <div className="min-h-screen bg-black/60 flex items-center justify-center relative overflow-hidden">
       {/* Add the same animated background */}
-      <AuthAnimatedBackground />
 
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 opacity-[0.02]">
@@ -287,15 +278,25 @@ const AuthForm = ({ type }: { type: FormType }) => {
                   <Button
                     type="button"
                     onClick={handleGoogleSignin}
-                    className="w-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/20 text-white font-medium h-12 rounded-xl transition-all duration-300 flex items-center justify-center gap-3"
+                    disabled={isGoogleLoading}
+                    className="w-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/20 text-white font-medium h-12 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Image
-                      src="/google-icon.svg"
-                      alt="Google"
-                      width={20}
-                      height={20}
-                    />
-                    <span>Google</span>
+                    {isGoogleLoading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Signing in...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Image
+                          src="/google-icon.svg"
+                          alt="Google"
+                          width={20}
+                          height={20}
+                        />
+                        <span>Google</span>
+                      </>
+                    )}
                   </Button>
                 </div>
               </motion.form>
@@ -317,6 +318,14 @@ const AuthForm = ({ type }: { type: FormType }) => {
             </motion.p>
           </motion.div>
         </motion.div>
+        {showAuthOverlay && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 flex flex-col items-center gap-4">
+              <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <p className="text-white">Completing sign-in...</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
