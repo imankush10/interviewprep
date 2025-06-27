@@ -14,7 +14,7 @@ const ClientNavigation = ({ userInitial }: ClientNavigationProps) => {
       <Link href="/" className="flex items-center gap-2">
         <div className="flex flex-row gap-2 items-center">
           <Image
-            src="/logo.png"
+            src="/logo-inverted.png"
             width={38}
             height={30}
             alt="logo"
