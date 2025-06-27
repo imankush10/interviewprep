@@ -3,7 +3,7 @@ import ClientNavigation from "@/components/ClientNavigation";
 
 const AuthLayout = ({ children }: { children: ReactNode }) => {
   return <div className="min-h-screen w-full">
-    <ClientNaigation/>
+    <ClientNavigation/>
     {children}
     </div>;
 };
