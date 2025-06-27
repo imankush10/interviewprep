@@ -14,13 +14,13 @@ const ClientNavigation = ({ userInitial }: ClientNavigationProps) => {
       <Link href="/" className="flex items-center gap-2">
         <div className="flex flex-row gap-2 items-center">
           <Image
-            src="/logo.svg"
+            src="/logo.png"
             width={38}
             height={30}
             alt="logo"
             className="w-auto h-auto"
           />
-          <h2 className="text-primary-100 text-2xl">InterviewPrep</h2>
+          <h2 className="text-primary-100 text-2xl">OnLevel</h2>
         </div>
       </Link>
 
