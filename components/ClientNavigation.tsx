@@ -71,7 +71,7 @@ export default function ClientNavigation({ user }: ModernNavbarProps) {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <Link href="/" className="flex items-center space-x-3">
+              <Link href="https://onlevel.vercel.app/" className="flex items-center space-x-3">
                 <div className="rounded-md p-1.5">
                   <Image src="/logo.png" width={52} height={52} alt="logo" />
                 </div>
@@ -80,27 +80,29 @@ export default function ClientNavigation({ user }: ModernNavbarProps) {
               </Link>
             </motion.div>
 
-            {/* Center - Navigation Links (Desktop) */}
-            <div className="hidden md:flex items-center space-x-1">
-              {navItems.map((item, index) => (
-                <motion.div
-                  key={item.href}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                >
-                  <Link href={item.href}>
-                    <Button
-                      variant="ghost"
-                      className="text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300 rounded-xl px-4 py-2 flex items-center space-x-2"
-                    >
-                      <item.icon className="w-4 h-4" />
-                      <span className="text-sm font-medium">{item.label}</span>
-                    </Button>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+            {/* Center - Navigation Links (Desktop) - Only show if user exists */}
+            {user && (
+              <div className="hidden md:flex items-center space-x-1">
+                {navItems.map((item, index) => (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                  >
+                    <Link href={item.href}>
+                      <Button
+                        variant="ghost"
+                        className="text-white/80 hover:text-white hover:bg-white/10 transition-all duration-300 rounded-xl px-4 py-2 flex items-center space-x-2"
+                      >
+                        <item.icon className="w-4 h-4" />
+                        <span className="text-sm font-medium">{item.label}</span>
+                      </Button>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
             {/* Right side - Conditionally render user profile or mobile menu */}
             <div className="flex items-center space-x-3">
@@ -155,61 +157,65 @@ export default function ClientNavigation({ user }: ModernNavbarProps) {
                 </div>
               )}
 
-              {/* Mobile Menu Button */}
-              <motion.button
-                className="md:hidden p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isMenuOpen ? (
-                  <X className="w-5 h-5" />
-                ) : (
-                  <Menu className="w-5 h-5" />
-                )}
-              </motion.button>
+              {/* Mobile Menu Button - Only show if user exists */}
+              {user && (
+                <motion.button
+                  className="md:hidden p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isMenuOpen ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
+                </motion.button>
+              )}
             </div>
           </div>
 
-          {/* Mobile Navigation */}
-          <AnimatePresence>
-            {isMenuOpen && (
-              <motion.div
-                className="md:hidden border-t border-white/10"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="p-4 space-y-2">
-                  {navItems.map((item, index) => (
-                    <motion.div
-                      key={item.href}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
-                      <Link href={item.href}>
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-3 flex items-center space-x-3"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.label}</span>
-                        </Button>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Mobile Navigation - Only show if user exists */}
+          {user && (
+            <AnimatePresence>
+              {isMenuOpen && (
+                <motion.div
+                  className="md:hidden border-t border-white/10"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="p-4 space-y-2">
+                    {navItems.map((item, index) => (
+                      <motion.div
+                        key={item.href}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <Link href={item.href}>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-3 flex items-center space-x-3"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <item.icon className="w-4 h-4" />
+                            <span>{item.label}</span>
+                          </Button>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </motion.nav>
 
-      {/* Click outside to close dropdowns */}
-      {(isProfileOpen || isMenuOpen) && (
+      {/* Click outside to close dropdowns - Only show if user exists */}
+      {user && (isProfileOpen || isMenuOpen) && (
         <div
           className="fixed inset-0 z-40"
           onClick={() => {
