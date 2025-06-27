@@ -18,8 +18,8 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <title>Interview Prep</title>
-        <meta name="description" content="AI Powered Interviewing webapp" />
-        <link rel="icon" type="image/svg" href="/logo.svg" />
+        <meta name="description" content="AI Powered Interview Platform" />
+        <link rel="icon" type="image/svg" href="/logo.png" />
       </head>
       <body className={`${monaSans.className} antialiased pattern`}>
         <ReactQueryProvider>
