@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import ClientNavigation from "@/components/ClientNavigation"; // We'll create this
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Loader from "@/components/Loader";
+import { motion } from "framer-motion";
+import ClientNavigation from "@/components/ClientNavigation";
 
 const InnerRootLayout = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -24,9 +25,15 @@ const InnerRootLayout = ({ children }: { children: ReactNode }) => {
   if (!user) return <Loader />;
 
   return (
-    <div className="root-layout">
-      <ClientNavigation userInitial={user.name[0]} />
-      {children}
+    <div className="min-h-screen">
+      <ClientNavigation user={user} />
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        {children}
+      </motion.main>
     </div>
   );
 };

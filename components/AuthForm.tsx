@@ -10,6 +10,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import FormField from "./FormField";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -20,12 +21,53 @@ import { auth } from "@/firebase/client";
 import { signIn, signUp } from "@/lib/actions/auth.action";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Add the same animated background from your landing page
+function AuthAnimatedBackground() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <motion.div
+        className="absolute -inset-10 opacity-30"
+        animate={{
+          background: [
+            "radial-gradient(600px circle at 0% 0%, rgba(120, 119, 198, 0.2), transparent 50%)",
+            "radial-gradient(600px circle at 100% 100%, rgba(120, 119, 198, 0.2), transparent 50%)",
+            "radial-gradient(600px circle at 50% 50%, rgba(120, 119, 198, 0.2), transparent 50%)",
+            "radial-gradient(600px circle at 0% 0%, rgba(120, 119, 198, 0.2), transparent 50%)",
+          ],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+      <motion.div
+        className="absolute -inset-10 opacity-20"
+        animate={{
+          background: [
+            "radial-gradient(800px circle at 100% 0%, rgba(76, 29, 149, 0.3), transparent 50%)",
+            "radial-gradient(800px circle at 0% 100%, rgba(76, 29, 149, 0.3), transparent 50%)",
+            "radial-gradient(800px circle at 50% 0%, rgba(76, 29, 149, 0.3), transparent 50%)",
+            "radial-gradient(800px circle at 100% 0%, rgba(76, 29, 149, 0.3), transparent 50%)",
+          ],
+        }}
+        transition={{
+          duration: 25,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+    </div>
+  );
+}
+
 const authFormSchema = (type: FormType) =>
   z.object({
     name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
     email: z.string().email(),
     password: z.string().min(6),
   });
+
 const AuthForm = ({ type }: { type: FormType }) => {
   const isSignIn = type === "sign-in";
   const formSchema = authFormSchema(type);
@@ -123,81 +165,158 @@ const AuthForm = ({ type }: { type: FormType }) => {
   }
 
   return (
-    <div className="card-border lg:min-w-[566px]">
-      <div className="flex flex-col gap-6 card py-14 px-10">
-        <div className="flex flex-row gap-2 justify-center">
-          <Image
-            src="/logo.png"
-            height={32}
-            width={38}
-            alt="logo of the site"
-          />
-          <h2 className="text-primary-100">OnLevel</h2>
-        </div>
-        <h3>Practice job interviews with AI</h3>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-6 mt-4 form"
-          >
-            {!isSignIn && (
-              <FormField
-                control={form.control}
-                label="Name"
-                name="name"
-                placeholder="Your Name"
-              />
-            )}
-            <FormField
-              control={form.control}
-              label="Email"
-              name="email"
-              placeholder="Your Email address"
-              type="email"
-            />
-            <FormField
-              control={form.control}
-              label="Password"
-              name="password"
-              placeholder="Password"
-              type="password"
-            />
+    <div className="min-h-screen bg-black/60 flex items-center justify-center relative overflow-hidden">
+      {/* Add the same animated background */}
+      <AuthAnimatedBackground />
 
-            <Button className="btn" type="submit">
-              {isSignIn ? "Sign in" : "Create an account"}
-            </Button>
-            <div className="mx-auto space-y-4">
-              <div className="flex items-center justify-center gap-2">
-                <div className="flex-1 h-px bg-muted" />
-                <span className="text-sm text-muted-foreground">
-                  or continue with
-                </span>
-                <div className="flex-1 h-px bg-muted" />
-              </div>
-              <Button
-                className="btn-secondary w-full"
-                onClick={handleGoogleSignin}
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 opacity-[0.02]">
+        <div className="h-full w-full bg-[linear-gradient(rgba(0,0,0,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.7)_1px,transparent_1px)] bg-[size:80px_80px]" />
+      </div>
+
+      <div className="container relative z-10 mx-auto px-4">
+        <motion.div
+          className="w-full max-w-lg mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          {/* Main auth card */}
+          <motion.div
+            className="bg-white/[0.05] lg:min-w-lg backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl card"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            whileHover={{
+              borderColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+            }}
+          >
+            {/* Logo and title */}
+            <div className="text-center mb-8">
+              <motion.div
+                className="flex justify-center items-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
               >
                 <Image
-                  src="/google-icon.svg"
-                  alt="Google"
-                  width={20}
-                  height={20}
+                  src="/logo.png"
+                  height={48}
+                  width={56}
+                  alt="logo of the site"
+                  className="mr-3"
                 />
-                <span>Google</span>
-              </Button>
+                <h2 className="text-white text-2xl font-semibold">OnLevel</h2>
+              </motion.div>
+
+              <motion.p
+                className="text-white/60 text-sm ml-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+              >
+                Practice job interviews with AI Agent
+              </motion.p>
             </div>
-          </form>
-        </Form>
-        <p className="text-center">
-          {isSignIn ? "No account yet?" : "Have an account already?"}
-          <Link
-            href={isSignIn ? "/sign-up" : "/sign-in"}
-            className="font-bold text-user-primary ml-1"
-          >
-            {isSignIn ? "Sign up" : "Sign in"}
-          </Link>
-        </p>
+
+            <Form {...form}>
+              <motion.form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+              >
+                {!isSignIn && (
+                  <div className="space-y-2">
+                    <label className="text-white/80 text-sm font-medium">
+                      Name
+                    </label>
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      placeholder="Your Name"
+                      className="bg-white/[0.05] border-white/20 text-white placeholder:text-white/40 rounded-xl h-12 px-4 focus:border-white/40 focus:bg-white/[0.08] transition-all"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-white/80 text-sm font-medium">
+                    Email
+                  </label>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    placeholder="Your Email address"
+                    type="email"
+                    className="bg-white/[0.05] border-white/20 text-white placeholder:text-white/40 rounded-xl h-12 px-4 focus:border-white/40 focus:bg-white/[0.08] transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-white/80 text-sm font-medium">
+                    Password
+                  </label>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    placeholder="Password"
+                    type="password"
+                    className="bg-white/[0.05] border-white/20 text-white placeholder:text-white/40 rounded-xl h-12 px-4 focus:border-white/40 focus:bg-white/[0.08] transition-all"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold h-12 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg"
+                >
+                  {isSignIn ? "Sign in" : "Create account"}
+                </Button>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="flex-1 h-px bg-white/20" />
+                    <span className="text-white/60 text-sm">
+                      or continue with
+                    </span>
+                    <div className="flex-1 h-px bg-white/20" />
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleGoogleSignin}
+                    className="w-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/20 text-white font-medium h-12 rounded-xl transition-all duration-300 flex items-center justify-center gap-3"
+                  >
+                    <Image
+                      src="/google-icon.svg"
+                      alt="Google"
+                      width={20}
+                      height={20}
+                    />
+                    <span>Google</span>
+                  </Button>
+                </div>
+              </motion.form>
+            </Form>
+
+            <motion.p
+              className="text-center text-white/60 text-sm mt-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              {isSignIn ? "No account yet?" : "Have an account already?"}
+              <Link
+                href={isSignIn ? "/sign-up" : "/sign-in"}
+                className="text-blue-400 hover:text-blue-300 font-medium ml-1 transition-colors"
+              >
+                {isSignIn ? "Sign up" : "Sign in"}
+              </Link>
+            </motion.p>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-
+  /* Update your custom colors to match target theme values */
   --color-success-100: #49de50;
   --color-success-200: #42c748;
   --color-destructive-100: #f75353;
@@ -31,6 +31,8 @@
 
 :root {
   --radius: 0.625rem;
+  
+  /* Update these values to match target theme */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -94,8 +96,6 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @theme inline {
@@ -297,11 +297,11 @@
 }
 
 @utility dark-gradient {
-  @apply bg-gradient-to-b from-[#1A1C20] to-[#08090D];
+  @apply bg-gradient-to-b from-[oklch(0.205_0_0)] to-[oklch(0.145_0_0)];
 }
 
 @utility border-gradient {
-  @apply bg-gradient-to-b from-[#4B4D4F] to-[#4B4D4F33];
+  @apply bg-gradient-to-b from-[oklch(0.922_0_0)] to-[oklch(0.922_0_0_/_10%)];
 }
 
 @utility pattern {
@@ -309,12 +309,13 @@
 }
 
 @utility blue-gradient-dark {
-  @apply bg-gradient-to-b from-[#171532] to-[#08090D];
+  @apply bg-gradient-to-b from-[oklch(0.269_0_0)] to-[oklch(0.145_0_0)];
 }
 
 @utility blue-gradient {
-  @apply bg-gradient-to-l from-[#FFFFFF] to-[#CAC5FE];
+  @apply bg-gradient-to-l from-[oklch(0.985_0_0)] to-[oklch(0.97_0_0)];
 }
+
 
 @utility flex-center {
   @apply flex items-center justify-center;

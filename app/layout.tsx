@@ -17,11 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <title>Interview Prep</title>
+        <title>OnLevel</title>
         <meta name="description" content="AI Powered Interview Platform" />
-        <link rel="icon" type="image/svg" href="/logo.png" />
+        <link rel="icon" type="image/png" href="logo_imresizer.png" />
       </head>
-      <body className={`${monaSans.className} antialiased pattern`}>
+      <body className={`${monaSans.className} antialiased bg-black`}>
         <ReactQueryProvider>
           {children}
           <Toaster />
