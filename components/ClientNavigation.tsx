@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import LogoutButton from "./Logout";
 
 interface ModernNavbarProps {
-  user: {
+  user?: {
     name: string;
     email: string;
     profilePicture?: string;
@@ -102,57 +102,58 @@ export default function ClientNavigation({ user }: ModernNavbarProps) {
               ))}
             </div>
 
-            {/* Right side - Notifications and Profile */}
+            {/* Right side - Conditionally render user profile or mobile menu */}
             <div className="flex items-center space-x-3">
-              {/* Profile Dropdown */}
-              <div className="relative">
-                <motion.button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center space-x-3 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    {user.name[0].toUpperCase()}
-                  </div>
-                  <span className="hidden sm:block text-sm font-medium">
-                    {user.name}
-                  </span>
-                </motion.button>
+              {/* Only show profile section if user exists */}
+              {user && (
+                <div className="relative">
+                  <motion.button
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className="flex items-center space-x-3 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                      {user.name[0].toUpperCase()}
+                    </div>
+                    <span className="hidden sm:block text-sm font-medium">
+                      {user.name}
+                    </span>
+                  </motion.button>
 
-                {/* Profile Dropdown Menu */}
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div
-                      className="absolute right-0 top-full mt-2 w-64 bg-black/80 border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="p-4 border-b border-white/10">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                            {user.name[0].toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-white font-medium">
-                              {user.name}
-                            </p>
-                            <p className="text-white/60 text-sm">
-                              {user.email}
-                            </p>
+                  {/* Profile Dropdown Menu */}
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div
+                        className="absolute right-0 top-full mt-2 w-64 bg-black/80 border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="p-4 border-b border-white/10">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                              {user.name[0].toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">
+                                {user.name}
+                              </p>
+                              <p className="text-white/60 text-sm">
+                                {user.email}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-
-                      <div className="p-2">
-                      <LogoutButton />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                        <div className="p-2">
+                          <LogoutButton />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
 
               {/* Mobile Menu Button */}
               <motion.button
