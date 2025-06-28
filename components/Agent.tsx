@@ -463,6 +463,48 @@ const Agent = ({
           </motion.div>
         </motion.div>
 
+      <motion.div
+          className="flex justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          {callStatus === CallStatus.ACTIVE ? (
+            <motion.button
+              onClick={handleDisconnect}
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-12 py-4 rounded-2xl flex items-center gap-3 shadow-lg transition-all duration-300 transform hover:scale-105"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <PhoneOff className="w-6 h-6" />
+              End Interview
+            </motion.button>
+          ) : (
+            <motion.button
+              onClick={handleCall}
+              disabled={callStatus === CallStatus.CONNECTING}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 text-white font-semibold px-12 py-4 rounded-2xl flex items-center gap-3 shadow-lg transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
+              whileHover={{
+                scale: callStatus === CallStatus.CONNECTING ? 1 : 1.05,
+              }}
+              whileTap={{
+                scale: callStatus === CallStatus.CONNECTING ? 1 : 0.95,
+              }}
+            >
+              {callStatus === CallStatus.CONNECTING ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Phone className="w-6 h-6" />
+                  Start Interview
+                </>
+              )}
+            </motion.button>
+          )}
+        </motion.div>
         {/* Live Transcript */}
         <AnimatePresence>
   {messages.length > 0 && (
@@ -548,48 +590,7 @@ const Agent = ({
         />
 
         {/* Call Controls */}
-        <motion.div
-          className="flex justify-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          {callStatus === CallStatus.ACTIVE ? (
-            <motion.button
-              onClick={handleDisconnect}
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-12 py-4 rounded-2xl flex items-center gap-3 shadow-lg transition-all duration-300 transform hover:scale-105"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <PhoneOff className="w-6 h-6" />
-              End Interview
-            </motion.button>
-          ) : (
-            <motion.button
-              onClick={handleCall}
-              disabled={callStatus === CallStatus.CONNECTING}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 text-white font-semibold px-12 py-4 rounded-2xl flex items-center gap-3 shadow-lg transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
-              whileHover={{
-                scale: callStatus === CallStatus.CONNECTING ? 1 : 1.05,
-              }}
-              whileTap={{
-                scale: callStatus === CallStatus.CONNECTING ? 1 : 0.95,
-              }}
-            >
-              {callStatus === CallStatus.CONNECTING ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Phone className="w-6 h-6" />
-                  Start Interview
-                </>
-              )}
-            </motion.button>
-          )}
-        </motion.div>
+        
       </div>
     </div>
   );
