@@ -299,11 +299,6 @@ const Agent = ({
     <div className="min-h-screen bg-black relative overflow-hidden">
       <InterviewBackground />
 
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="h-full w-full bg-[linear-gradient(rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:80px_80px]" />
-      </div>
-
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
         {/* Status Header */}
         <motion.div
@@ -341,7 +336,7 @@ const Agent = ({
                   />
                   <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
                     <Image
-                      src="/ai-avatar.png"
+                      src="/logo.png"
                       alt="AI Interviewer"
                       width={80}
                       height={80}
