@@ -46,48 +46,131 @@ interface AgentProps {
 
 // Navigation blocking hook
 const useNavigationBlocker = (shouldBlock: boolean, message: string) => {
+  const router = useRouter();
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const originalPush = useRef<any>(null);
+  const originalReplace = useRef<any>(null);
+  const originalBack = useRef<any>(null);
 
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (shouldBlock) {
+    // Store original router methods
+    if (!originalPush.current) {
+      originalPush.current = router.push;
+      originalReplace.current = router.replace;
+      originalBack.current = router.back;
+    }
+
+    if (shouldBlock) {
+      // Override router.push
+      router.push = (href: string, options?: any) => {
+        setWarningMessage(message);
+        setShowWarning(true);
+        setPendingNavigation(href);
+        return Promise.resolve(true);
+      };
+
+      // Override router.replace
+      router.replace = (href: string, options?: any) => {
+        setWarningMessage(message);
+        setShowWarning(true);
+        setPendingNavigation(href);
+        return Promise.resolve(true);
+      };
+
+      // Override router.back
+      router.back = () => {
+        setWarningMessage(message);
+        setShowWarning(true);
+        setPendingNavigation('back');
+      };
+
+      // Handle browser navigation
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         e.preventDefault();
         e.returnValue = message;
         return message;
-      }
-    };
+      };
 
-    const handlePopState = (e: PopStateEvent) => {
-      if (shouldBlock) {
+      const handlePopState = (e: PopStateEvent) => {
         e.preventDefault();
         setWarningMessage(message);
         setShowWarning(true);
-        // Push the current state back to prevent navigation
+        setPendingNavigation('back');
         window.history.pushState(null, '', window.location.href);
         return false;
-      }
-    };
+      };
 
-    if (shouldBlock) {
+      // Block all Link clicks
+      const handleLinkClick = (e: Event) => {
+        const target = e.target as HTMLElement;
+        const link = target.closest('a, [role="link"]');
+        if (link && link !== e.currentTarget) {
+          e.preventDefault();
+          e.stopPropagation();
+          setWarningMessage(message);
+          setShowWarning(true);
+          
+          const href = link.getAttribute('href');
+          if (href && href !== '#') {
+            setPendingNavigation(href);
+          }
+        }
+      };
+
       window.addEventListener('beforeunload', handleBeforeUnload);
       window.addEventListener('popstate', handlePopState);
-      // Prevent back navigation by pushing current state
+      document.addEventListener('click', handleLinkClick, true);
       window.history.pushState(null, '', window.location.href);
-    }
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [shouldBlock, message]);
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener('popstate', handlePopState);
+        document.removeEventListener('click', handleLinkClick, true);
+      };
+    } else {
+      // Restore original router methods when not blocking
+      if (originalPush.current) {
+        router.push = originalPush.current;
+        router.replace = originalReplace.current;
+        router.back = originalBack.current;
+      }
+    }
+  }, [shouldBlock, message, router]);
 
   const hideWarning = useCallback(() => {
     setShowWarning(false);
     setWarningMessage("");
+    setPendingNavigation(null);
   }, []);
 
-  return { showWarning, warningMessage, hideWarning };
+  const confirmNavigation = useCallback(() => {
+    if (pendingNavigation) {
+      setShowWarning(false);
+      
+      // Temporarily disable blocking
+      const currentPendingNav = pendingNavigation;
+      setPendingNavigation(null);
+      
+      // Restore original methods and navigate
+      if (originalPush.current) {
+        router.push = originalPush.current;
+        router.replace = originalReplace.current;
+        router.back = originalBack.current;
+      }
+      
+      setTimeout(() => {
+        if (currentPendingNav === 'back') {
+          window.history.back();
+        } else {
+          originalPush.current(currentPendingNav);
+        }
+      }, 0);
+    }
+  }, [pendingNavigation, router]);
+
+  return { showWarning, warningMessage, hideWarning, confirmNavigation };
 };
 
 // Audio visualization component
@@ -127,12 +210,14 @@ function NavigationWarningModal({
   message, 
   onClose, 
   onEndInterview,
+  onConfirmNavigation,
   isInterviewActive 
 }: {
   isOpen: boolean;
   message: string;
   onClose: () => void;
   onEndInterview?: () => void;
+  onConfirmNavigation?: () => void;
   isInterviewActive: boolean;
 }) {
   if (!isOpen) return null;
@@ -177,6 +262,15 @@ function NavigationWarningModal({
                 End Interview
               </button>
             )}
+            
+            {!isInterviewActive && onConfirmNavigation && (
+              <button
+                onClick={onConfirmNavigation}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Continue
+              </button>
+            )}
           </div>
         </motion.div>
       </motion.div>
@@ -213,10 +307,10 @@ const Agent = ({
   };
 
   // Use navigation blocker
-  const { showWarning, warningMessage, hideWarning } = useNavigationBlocker(
-    shouldBlockNavigation,
-    getBlockMessage()
-  );
+  const { showWarning, warningMessage, hideWarning, confirmNavigation } = useNavigationBlocker(
+  shouldBlockNavigation,
+  getBlockMessage()
+);
 
   // React Query mutation for feedback
   const feedbackMutation = useMutation({
@@ -582,12 +676,13 @@ const Agent = ({
 
         {/* Navigation Warning Modal */}
         <NavigationWarningModal
-          isOpen={showWarning}
-          message={warningMessage}
-          onClose={hideWarning}
-          onEndInterview={isInterviewActive ? handleForceEndInterview : undefined}
-          isInterviewActive={isInterviewActive}
-        />
+  isOpen={showWarning}
+  message={warningMessage}
+  onClose={hideWarning}
+  onEndInterview={isInterviewActive ? handleForceEndInterview : undefined}
+  onConfirmNavigation={!isInterviewActive ? confirmNavigation : undefined}
+  isInterviewActive={isInterviewActive}
+/>
 
         {/* Call Controls */}
         
