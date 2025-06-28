@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,6 +19,8 @@ import {
   Loader2,
   Zap,
   Activity,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import Loader from "./Loader";
 
@@ -41,6 +43,52 @@ interface AgentProps {
   interviewId: string;
   questions?: string[];
 }
+
+// Navigation blocking hook
+const useNavigationBlocker = (shouldBlock: boolean, message: string) => {
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (shouldBlock) {
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (shouldBlock) {
+        e.preventDefault();
+        setWarningMessage(message);
+        setShowWarning(true);
+        // Push the current state back to prevent navigation
+        window.history.pushState(null, '', window.location.href);
+        return false;
+      }
+    };
+
+    if (shouldBlock) {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener('popstate', handlePopState);
+      // Prevent back navigation by pushing current state
+      window.history.pushState(null, '', window.location.href);
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [shouldBlock, message]);
+
+  const hideWarning = useCallback(() => {
+    setShowWarning(false);
+    setWarningMessage("");
+  }, []);
+
+  return { showWarning, warningMessage, hideWarning };
+};
 
 // Audio visualization component
 function AudioVisualization({ isActive }: { isActive: boolean }) {
@@ -73,44 +121,66 @@ function AudioVisualization({ isActive }: { isActive: boolean }) {
   );
 }
 
-// Status indicator component
-function StatusIndicator({ status }: { status: CallStatus }) {
-  const getStatusConfig = () => {
-    switch (status) {
-      case CallStatus.ACTIVE:
-        return {
-          color: "bg-green-400",
-          text: "Interview Active",
-          icon: Activity,
-        };
-      case CallStatus.CONNECTING:
-        return { color: "bg-yellow-400", text: "Connecting...", icon: Loader2 };
-      case CallStatus.FINISHED:
-        return { color: "bg-red-400", text: "Interview Ended", icon: PhoneOff };
-      default:
-        return { color: "bg-gray-400", text: "Ready to Start", icon: Brain };
-    }
-  };
-
-  const config = getStatusConfig();
-  const IconComponent = config.icon;
+// Navigation Warning Modal
+function NavigationWarningModal({ 
+  isOpen, 
+  message, 
+  onClose, 
+  onEndInterview,
+  isInterviewActive 
+}: {
+  isOpen: boolean;
+  message: string;
+  onClose: () => void;
+  onEndInterview?: () => void;
+  isInterviewActive: boolean;
+}) {
+  if (!isOpen) return null;
 
   return (
-    <div className="inline-flex items-center space-x-3 bg-white/[0.08] border border-white/20 rounded-full px-4 py-2 backdrop-blur-xl">
-      <div
-        className={cn(
-          "w-2 h-2 rounded-full",
-          config.color,
-          status === CallStatus.ACTIVE && "animate-pulse"
-        )}
-      />
-      {status === CallStatus.CONNECTING ? (
-        <Loader2 className="w-4 h-4 text-white/90 animate-spin" />
-      ) : (
-        <IconComponent className="w-4 h-4 text-white/90" />
-      )}
-      <span className="text-white/90 text-sm font-medium">{config.text}</span>
-    </div>
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="bg-white/[0.08] backdrop-blur-xl border border-white/20 rounded-2xl p-8 text-center max-w-md mx-4"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+        >
+          <AlertTriangle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+          
+          <h3 className="text-xl font-semibold text-white mb-4">
+            {isInterviewActive ? "Interview in Progress" : "Processing Feedback"}
+          </h3>
+          
+          <p className="text-white/70 mb-6">
+            {message}
+          </p>
+          
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={onClose}
+              className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              Stay
+            </button>
+            
+            {isInterviewActive && onEndInterview && (
+              <button
+                onClick={onEndInterview}
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                End Interview
+              </button>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -125,7 +195,28 @@ const Agent = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  const [isProcessingFeedback, setIsProcessingFeedback] = useState(false);
   const hasSubmittedFeedback = useRef(false);
+
+  // Determine what to block and appropriate messages
+  const isInterviewActive = callStatus === CallStatus.ACTIVE;
+  const shouldBlockNavigation = isInterviewActive || isProcessingFeedback;
+  
+  const getBlockMessage = () => {
+    if (isInterviewActive) {
+      return "Your interview is currently active. Please end the interview before leaving this page.";
+    }
+    if (isProcessingFeedback) {
+      return "Your feedback is being generated. Please wait for the process to complete.";
+    }
+    return "";
+  };
+
+  // Use navigation blocker
+  const { showWarning, warningMessage, hideWarning } = useNavigationBlocker(
+    shouldBlockNavigation,
+    getBlockMessage()
+  );
 
   // React Query mutation for feedback
   const feedbackMutation = useMutation({
@@ -138,6 +229,7 @@ const Agent = ({
       return res.json();
     },
     onSuccess: (data) => {
+      setIsProcessingFeedback(false);
       if (data.success && data.feedbackId) {
         router.push(`/interview/${interviewId}/feedback/`);
       } else {
@@ -145,6 +237,7 @@ const Agent = ({
       }
     },
     onError: () => {
+      setIsProcessingFeedback(false);
       router.push("/");
     },
   });
@@ -192,21 +285,24 @@ const Agent = ({
     };
   }, []);
 
-  // Debounced feedback generation on call end
+  // Enhanced feedback generation on call end
   useEffect(() => {
-    console.log(userId);
     if (
       callStatus === CallStatus.FINISHED &&
       type !== "generate" &&
       !hasSubmittedFeedback.current
     ) {
       hasSubmittedFeedback.current = true;
+      setIsProcessingFeedback(true);
 
-      feedbackMutation.mutate({
-        userId,
-        interviewId,
-        transcript: messages,
-      });
+      // Small delay to ensure UI updates, then start feedback generation
+      setTimeout(() => {
+        feedbackMutation.mutate({
+          userId,
+          interviewId,
+          transcript: messages,
+        });
+      }, 100);
     }
 
     if (callStatus === CallStatus.FINISHED && type === "generate") {
@@ -267,23 +363,17 @@ const Agent = ({
     }
   };
 
+  // Handle forced interview end from navigation warning
+  const handleForceEndInterview = () => {
+    handleDisconnect();
+    hideWarning();
+  };
+
   const latestMessage = messages[messages.length - 1]?.content;
-  const isCallInactiveOrFinished =
-    callStatus === CallStatus.FINISHED || callStatus === CallStatus.INACTIVE;
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
-        {/* Status Header */}
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <StatusIndicator status={callStatus} />
-        </motion.div>
-
         {/* Interview Participants */}
         <motion.div
           className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"
@@ -390,7 +480,6 @@ const Agent = ({
                     Live Transcript
                   </h3>
                 </div>
-
                 <motion.div
                   className="bg-black/20 rounded-xl p-4 min-h-[100px] max-h-40 overflow-y-auto"
                   key={latestMessage}
@@ -407,27 +496,56 @@ const Agent = ({
           )}
         </AnimatePresence>
 
-        {/* Feedback Loading Overlay */}
+        {/* Enhanced Feedback Processing Overlay */}
         <AnimatePresence>
-          {feedbackMutation.isLoading && (
+          {(isProcessingFeedback || feedbackMutation.isLoading) && (
             <motion.div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               <div className="bg-white/[0.08] backdrop-blur-xl border border-white/20 rounded-2xl p-8 text-center max-w-md mx-4">
-                <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Brain className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                </motion.div>
+                
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  Generating Feedback
+                  Processing Interview
                 </h3>
-                <p className="text-white/70">
-                  Our AI is analyzing your interview performance...
+                <p className="text-white/70 mb-4">
+                  Our AI is analyzing your performance and generating detailed feedback...
+                </p>
+                
+                {/* Progress indicator */}
+                <div className="w-full bg-white/10 rounded-full h-2 mb-4">
+                  <motion.div
+                    className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 3, ease: "easeInOut" }}
+                  />
+                </div>
+                
+                <p className="text-white/50 text-sm">
+                  Please don't close this window...
                 </p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Navigation Warning Modal */}
+        <NavigationWarningModal
+          isOpen={showWarning}
+          message={warningMessage}
+          onClose={hideWarning}
+          onEndInterview={isInterviewActive ? handleForceEndInterview : undefined}
+          isInterviewActive={isInterviewActive}
+        />
 
         {/* Call Controls */}
         <motion.div
