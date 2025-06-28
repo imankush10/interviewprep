@@ -42,30 +42,6 @@ interface AgentProps {
   questions?: string[];
 }
 
-// Animated background component
-function InterviewBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      <motion.div
-        className="absolute -inset-10 opacity-20"
-        animate={{
-          background: [
-            "radial-gradient(600px circle at 30% 30%, rgba(120, 119, 198, 0.15), transparent 50%)",
-            "radial-gradient(600px circle at 70% 70%, rgba(120, 119, 198, 0.15), transparent 50%)",
-            "radial-gradient(600px circle at 50% 50%, rgba(120, 119, 198, 0.15), transparent 50%)",
-            "radial-gradient(600px circle at 30% 30%, rgba(120, 119, 198, 0.15), transparent 50%)",
-          ],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-      />
-    </div>
-  );
-}
-
 // Audio visualization component
 function AudioVisualization({ isActive }: { isActive: boolean }) {
   return (
@@ -297,8 +273,6 @@ const Agent = ({
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      <InterviewBackground />
-
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
         {/* Status Header */}
         <motion.div
