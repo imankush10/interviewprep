@@ -294,14 +294,11 @@ const Agent = ({
 
   // Determine what to block and appropriate messages
   const isInterviewActive = callStatus === CallStatus.ACTIVE;
-  const shouldBlockNavigation = isInterviewActive || isProcessingFeedback;
+  const shouldBlockNavigation = isInterviewActive;
   
   const getBlockMessage = () => {
     if (isInterviewActive) {
       return "Your interview is currently active. Please end the interview before leaving this page.";
-    }
-    if (isProcessingFeedback) {
-      return "Your feedback is being generated. Please wait for the process to complete.";
     }
     return "";
   };
@@ -680,7 +677,6 @@ const Agent = ({
   message={warningMessage}
   onClose={hideWarning}
   onEndInterview={isInterviewActive ? handleForceEndInterview : undefined}
-  onConfirmNavigation={!isInterviewActive ? confirmNavigation : undefined}
   isInterviewActive={isInterviewActive}
 />
 
