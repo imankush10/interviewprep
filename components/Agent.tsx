@@ -465,36 +465,36 @@ const Agent = ({
 
         {/* Live Transcript */}
         <AnimatePresence>
-          {messages.length > 0 && (
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <MessageSquare className="w-5 h-5 text-blue-400" />
-                  <h3 className="text-lg font-semibold text-white">
-                    Live Transcript
-                  </h3>
-                </div>
-                <motion.div
-                  className="bg-black/20 rounded-xl p-4 min-h-[100px] max-h-40 overflow-y-auto"
-                  key={latestMessage}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.1 }}
-                >
-                  <p className="text-white/80 leading-relaxed">
-                    {latestMessage || "Waiting for conversation to begin..."}
-                  </p>
-                </motion.div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+  {messages.length > 0 && (
+    <motion.div
+      className="mb-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <MessageSquare className="w-5 h-5 text-blue-400" />
+          <h3 className="text-lg font-semibold text-white">
+            Live Transcript
+          </h3>
+        </div>
+        <motion.div
+          className="bg-black/20 rounded-xl p-4 h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+          key={latestMessage}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.1 }}
+        >
+          <p className="text-white/80 leading-relaxed">
+            {latestMessage || "Waiting for conversation to begin..."}
+          </p>
+        </motion.div>
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
         {/* Enhanced Feedback Processing Overlay */}
         <AnimatePresence>
