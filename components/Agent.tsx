@@ -49,7 +49,9 @@ const useNavigationBlocker = (shouldBlock: boolean, message: string) => {
   const router = useRouter();
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+    null
+  );
   const originalPush = useRef<any>(null);
   const originalReplace = useRef<any>(null);
   const originalBack = useRef<any>(null);
@@ -83,7 +85,7 @@ const useNavigationBlocker = (shouldBlock: boolean, message: string) => {
       router.back = () => {
         setWarningMessage(message);
         setShowWarning(true);
-        setPendingNavigation('back');
+        setPendingNavigation("back");
       };
 
       // Handle browser navigation
@@ -97,8 +99,8 @@ const useNavigationBlocker = (shouldBlock: boolean, message: string) => {
         e.preventDefault();
         setWarningMessage(message);
         setShowWarning(true);
-        setPendingNavigation('back');
-        window.history.pushState(null, '', window.location.href);
+        setPendingNavigation("back");
+        window.history.pushState(null, "", window.location.href);
         return false;
       };
 
@@ -111,23 +113,23 @@ const useNavigationBlocker = (shouldBlock: boolean, message: string) => {
           e.stopPropagation();
           setWarningMessage(message);
           setShowWarning(true);
-          
-          const href = link.getAttribute('href');
-          if (href && href !== '#') {
+
+          const href = link.getAttribute("href");
+          if (href && href !== "#") {
             setPendingNavigation(href);
           }
         }
       };
 
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      window.addEventListener('popstate', handlePopState);
-      document.addEventListener('click', handleLinkClick, true);
-      window.history.pushState(null, '', window.location.href);
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      window.addEventListener("popstate", handlePopState);
+      document.addEventListener("click", handleLinkClick, true);
+      window.history.pushState(null, "", window.location.href);
 
       return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        window.removeEventListener('popstate', handlePopState);
-        document.removeEventListener('click', handleLinkClick, true);
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        window.removeEventListener("popstate", handlePopState);
+        document.removeEventListener("click", handleLinkClick, true);
       };
     } else {
       // Restore original router methods when not blocking
@@ -148,20 +150,20 @@ const useNavigationBlocker = (shouldBlock: boolean, message: string) => {
   const confirmNavigation = useCallback(() => {
     if (pendingNavigation) {
       setShowWarning(false);
-      
+
       // Temporarily disable blocking
       const currentPendingNav = pendingNavigation;
       setPendingNavigation(null);
-      
+
       // Restore original methods and navigate
       if (originalPush.current) {
         router.push = originalPush.current;
         router.replace = originalReplace.current;
         router.back = originalBack.current;
       }
-      
+
       setTimeout(() => {
-        if (currentPendingNav === 'back') {
+        if (currentPendingNav === "back") {
           window.history.back();
         } else {
           originalPush.current(currentPendingNav);
@@ -205,13 +207,13 @@ function AudioVisualization({ isActive }: { isActive: boolean }) {
 }
 
 // Navigation Warning Modal
-function NavigationWarningModal({ 
-  isOpen, 
-  message, 
-  onClose, 
+function NavigationWarningModal({
+  isOpen,
+  message,
+  onClose,
   onEndInterview,
   onConfirmNavigation,
-  isInterviewActive 
+  isInterviewActive,
 }: {
   isOpen: boolean;
   message: string;
@@ -237,15 +239,15 @@ function NavigationWarningModal({
           exit={{ scale: 0.9, opacity: 0 }}
         >
           <AlertTriangle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-          
+
           <h3 className="text-xl font-semibold text-white mb-4">
-            {isInterviewActive ? "Interview in Progress" : "Processing Feedback"}
+            {isInterviewActive
+              ? "Interview in Progress"
+              : "Processing Feedback"}
           </h3>
-          
-          <p className="text-white/70 mb-6">
-            {message}
-          </p>
-          
+
+          <p className="text-white/70 mb-6">{message}</p>
+
           <div className="flex gap-3 justify-center">
             <button
               onClick={onClose}
@@ -253,7 +255,7 @@ function NavigationWarningModal({
             >
               Stay
             </button>
-            
+
             {isInterviewActive && onEndInterview && (
               <button
                 onClick={onEndInterview}
@@ -262,7 +264,7 @@ function NavigationWarningModal({
                 End Interview
               </button>
             )}
-            
+
             {!isInterviewActive && onConfirmNavigation && (
               <button
                 onClick={onConfirmNavigation}
@@ -291,11 +293,14 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isProcessingFeedback, setIsProcessingFeedback] = useState(false);
   const hasSubmittedFeedback = useRef(false);
+  const [isWaitingForPermission, setIsWaitingForPermission] = useState(false);
+  const [hasPermissionBeenGranted, setHasPermissionBeenGranted] =
+    useState(false);
 
   // Determine what to block and appropriate messages
   const isInterviewActive = callStatus === CallStatus.ACTIVE;
   const shouldBlockNavigation = isInterviewActive;
-  
+
   const getBlockMessage = () => {
     if (isInterviewActive) {
       return "Your interview is currently active. Please end the interview before leaving this page.";
@@ -304,10 +309,8 @@ const Agent = ({
   };
 
   // Use navigation blocker
-  const { showWarning, warningMessage, hideWarning, confirmNavigation } = useNavigationBlocker(
-  shouldBlockNavigation,
-  getBlockMessage()
-);
+  const { showWarning, warningMessage, hideWarning, confirmNavigation } =
+    useNavigationBlocker(shouldBlockNavigation, getBlockMessage());
 
   // React Query mutation for feedback
   const feedbackMutation = useMutation({
@@ -335,10 +338,27 @@ const Agent = ({
 
   // Handle Vapi events
   useEffect(() => {
-    const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+    const onCallStart = () => {
+      setCallStatus(CallStatus.ACTIVE);
+      setIsWaitingForPermission(false);
+      setHasPermissionBeenGranted(true);
+    };
+
+    const onCallEnd = () => {
+      // Only process call end if we're not waiting for permission
+      // and the call actually started properly
+      if (!isWaitingForPermission && hasPermissionBeenGranted) {
+        setCallStatus(CallStatus.FINISHED);
+      } else {
+        // If we were waiting for permission, reset to inactive
+        setCallStatus(CallStatus.INACTIVE);
+        setIsWaitingForPermission(false);
+      }
+    };
+
     const onSpeechStart = () => setIsSpeaking(true);
     const onSpeechEnd = () => setIsSpeaking(false);
+
     const onError = (error: any) => {
       if (
         error?.error?.type === "no-room" ||
@@ -347,8 +367,18 @@ const Agent = ({
         console.log("Normal call termination detected, ignoring error");
         return;
       }
+
+      // If error happens while waiting for permission, reset state
+      if (isWaitingForPermission) {
+        setCallStatus(CallStatus.INACTIVE);
+        setIsWaitingForPermission(false);
+        console.log("Permission-related error, resetting state");
+        return;
+      }
+
       console.error("Vapi error:", error);
     };
+
     const onMessage = (message: any) => {
       if (message.type === "transcript" && message.transcriptType === "final") {
         const newMessage = {
@@ -374,19 +404,20 @@ const Agent = ({
       vapi.off("error", onError);
       vapi.off("message", onMessage);
     };
-  }, []);
+  }, [isWaitingForPermission, hasPermissionBeenGranted]); // Add dependencies
 
   // Enhanced feedback generation on call end
   useEffect(() => {
     if (
       callStatus === CallStatus.FINISHED &&
       type !== "generate" &&
-      !hasSubmittedFeedback.current
+      !hasSubmittedFeedback.current &&
+      hasPermissionBeenGranted && // Only submit if permission was properly granted
+      messages.length > 0 // Only submit if we actually have conversation
     ) {
       hasSubmittedFeedback.current = true;
       setIsProcessingFeedback(true);
 
-      // Small delay to ensure UI updates, then start feedback generation
       setTimeout(() => {
         feedbackMutation.mutate({
           userId,
@@ -408,39 +439,57 @@ const Agent = ({
     messages,
     router,
     feedbackMutation,
+    hasPermissionBeenGranted, // Add this dependency
   ]);
 
   // Call handling
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
+    setIsWaitingForPermission(true);
 
-    if (type === "generate") {
-      const assistantOverrides = {
-        variableValues: {
-          username: userName,
-          userid: userId,
-        },
-      };
+    try {
+      // Check if we already have mic permission
+      const permissionStatus = await navigator.permissions.query({
+        name: "microphone" as PermissionName,
+      });
 
-      await vapi.start(
-        process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,
-        assistantOverrides
-      );
-    } else {
-      let formattedQuestions = "";
-      if (questions) {
-        formattedQuestions = questions
-          .map((question) => `- ${question}`)
-          .join("\n");
+      if (permissionStatus.state === "granted") {
+        setHasPermissionBeenGranted(true);
+        setIsWaitingForPermission(false);
       }
 
-      const assistantOverrides = {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      };
+      if (type === "generate") {
+        const assistantOverrides = {
+          variableValues: {
+            username: userName,
+            userid: userId,
+          },
+        };
 
-      await vapi.start(interviewer, assistantOverrides);
+        await vapi.start(
+          process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!,
+          assistantOverrides
+        );
+      } else {
+        let formattedQuestions = "";
+        if (questions) {
+          formattedQuestions = questions
+            .map((question) => `- ${question}`)
+            .join("\n");
+        }
+
+        const assistantOverrides = {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+        };
+
+        await vapi.start(interviewer, assistantOverrides);
+      }
+    } catch (error) {
+      console.error("Error starting call:", error);
+      setCallStatus(CallStatus.INACTIVE);
+      setIsWaitingForPermission(false);
     }
   };
 
@@ -554,7 +603,7 @@ const Agent = ({
           </motion.div>
         </motion.div>
 
-      <motion.div
+        <motion.div
           className="flex justify-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -573,24 +622,23 @@ const Agent = ({
           ) : (
             <motion.button
               onClick={handleCall}
-              disabled={callStatus === CallStatus.CONNECTING}
+              disabled={
+                callStatus === CallStatus.CONNECTING || isWaitingForPermission
+              }
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 text-white font-semibold px-12 py-4 rounded-2xl flex items-center gap-3 shadow-lg transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
-              whileHover={{
-                scale: callStatus === CallStatus.CONNECTING ? 1 : 1.05,
-              }}
-              whileTap={{
-                scale: callStatus === CallStatus.CONNECTING ? 1 : 0.95,
-              }}
             >
-              {callStatus === CallStatus.CONNECTING ? (
+              {callStatus === CallStatus.CONNECTING ||
+              isWaitingForPermission ? (
                 <>
                   <Loader2 className="w-6 h-6 animate-spin" />
-                  Connecting...
+                  {isWaitingForPermission
+                    ? "Grant Microphone Permission..."
+                    : "Connecting..."}
                 </>
               ) : (
                 <>
                   <Phone className="w-6 h-6" />
-                  Start Interview
+                  {type === "generate" ? "Create" : "Start"} Interview
                 </>
               )}
             </motion.button>
@@ -598,36 +646,36 @@ const Agent = ({
         </motion.div>
         {/* Live Transcript */}
         <AnimatePresence>
-  {messages.length > 0 && (
-    <motion.div
-      className="mb-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
-        <div className="flex items-center gap-3 mb-4">
-          <MessageSquare className="w-5 h-5 text-blue-400" />
-          <h3 className="text-lg font-semibold text-white">
-            Live Transcript
-          </h3>
-        </div>
-        <motion.div
-          className="bg-black/20 rounded-xl p-4 h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
-          key={latestMessage}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.1 }}
-        >
-          <p className="text-white/80 leading-relaxed">
-            {latestMessage || "Waiting for conversation to begin..."}
-          </p>
-        </motion.div>
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+          {messages.length > 0 && (
+            <motion.div
+              className="mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <MessageSquare className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-lg font-semibold text-white">
+                    Live Transcript
+                  </h3>
+                </div>
+                <motion.div
+                  className="bg-black/20 rounded-xl p-4 h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+                  key={latestMessage}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.1 }}
+                >
+                  <p className="text-white/80 leading-relaxed">
+                    {latestMessage || "Waiting for conversation to begin..."}
+                  </p>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Enhanced Feedback Processing Overlay */}
         <AnimatePresence>
@@ -645,14 +693,15 @@ const Agent = ({
                 >
                   <Brain className="w-16 h-16 text-blue-400 mx-auto mb-4" />
                 </motion.div>
-                
+
                 <h3 className="text-xl font-semibold text-white mb-2">
                   Processing Interview
                 </h3>
                 <p className="text-white/70 mb-4">
-                  Our AI is analyzing your performance and generating detailed feedback...
+                  Our AI is analyzing your performance and generating detailed
+                  feedback...
                 </p>
-                
+
                 {/* Progress indicator */}
                 <div className="w-full bg-white/10 rounded-full h-2 mb-4">
                   <motion.div
@@ -662,7 +711,7 @@ const Agent = ({
                     transition={{ duration: 3, ease: "easeInOut" }}
                   />
                 </div>
-                
+
                 <p className="text-white/50 text-sm">
                   Please don't close this window...
                 </p>
@@ -673,15 +722,16 @@ const Agent = ({
 
         {/* Navigation Warning Modal */}
         <NavigationWarningModal
-  isOpen={showWarning}
-  message={warningMessage}
-  onClose={hideWarning}
-  onEndInterview={isInterviewActive ? handleForceEndInterview : undefined}
-  isInterviewActive={isInterviewActive}
-/>
+          isOpen={showWarning}
+          message={warningMessage}
+          onClose={hideWarning}
+          onEndInterview={
+            isInterviewActive ? handleForceEndInterview : undefined
+          }
+          isInterviewActive={isInterviewActive}
+        />
 
         {/* Call Controls */}
-        
       </div>
     </div>
   );
