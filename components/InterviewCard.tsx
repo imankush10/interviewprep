@@ -21,8 +21,8 @@ const InterviewCard = ({
   ).format("MMM D, YYYY");
 
   return (
-    <div className="card-border w-[360px] max-sm:w-full min-h-96 hover:scale-105 transition-all duration-500">
-      <div className="card-interview">
+    <div className="card-border w-[340px] max-sm:w-full min-h-96 hover:scale-105 transition-all duration-500">
+      <div className="card-interview h-[440px]">
         {/* Interview type badge */}
         <div className="absolute top-0 right-0 w-fit px-4 py-2 rounded-bl-lg bg-amber-700">
           <p className="badge-text">{normalisedType}</p>

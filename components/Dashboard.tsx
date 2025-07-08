@@ -6,7 +6,15 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { motion } from "framer-motion";
-import { Brain, Sparkles, Zap, TrendingUp, Calendar, Play } from "lucide-react";
+import {
+  Brain,
+  Sparkles,
+  Calendar,
+  Play,
+  User,
+  BookOpen,
+  Plus,
+} from "lucide-react";
 import SkeletonInterviewCard from "./skeletons/SkeletonInterviewCard";
 
 function fetchUserInterviews() {
@@ -41,12 +49,42 @@ export default function Dashboard() {
     return map;
   }, [userFeedbacks]);
 
-  const hasPastInterviews = userInterviews?.length > 0;
-  const hasUpcomingInterviews = allInterviews?.length > 0;
+  // Combine user interviews with taken interviews from available ones
+  const { yourInterviews, availableInterviews } = React.useMemo(() => {
+    const userInterviewIds = new Set(
+      (userInterviews || []).map((i: any) => i.id)
+    );
+    const takenFromAvailable: any[] = [];
+    const available: any[] = [];
+
+    // Separate taken vs available from the latest interviews
+    (allInterviews || []).forEach((interview: any) => {
+      if (feedbackMap[interview.id]) {
+        // Has feedback = taken, add to user's interviews
+        takenFromAvailable.push({ ...interview, isTaken: true });
+      } else {
+        // No feedback = available to take
+        available.push(interview);
+      }
+    });
+
+    // Combine user created interviews with taken interviews
+    const combinedUserInterviews = [
+      ...(userInterviews || []).map((i: any) => ({ ...i, isCreated: true })),
+      ...takenFromAvailable,
+    ];
+
+    return {
+      yourInterviews: combinedUserInterviews,
+      availableInterviews: available,
+    };
+  }, [userInterviews, allInterviews, feedbackMap]);
+
+  const hasYourInterviews = yourInterviews.length > 0;
+  const hasAvailableInterviews = availableInterviews.length > 0;
 
   return (
     <div className="min-h-screen bg-black/20 relative overflow-hidden">
-
       <div className="relative z-10 container mx-auto px-4 py-12">
         {/* Hero CTA Section */}
         <motion.section
@@ -58,7 +96,6 @@ export default function Dashboard() {
           <div className="bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-3xl p-8 lg:p-12 shadow-2xl">
             <div className="flex flex-col lg:flex-row items-center gap-8">
               <div className="flex-1 space-y-6">
-                {/* Status badge */}
                 <motion.div
                   className="inline-flex items-center space-x-3 bg-white/[0.08] border border-white/20 rounded-full px-4 py-2 backdrop-blur-xl"
                   initial={{ opacity: 0, x: -20 }}
@@ -90,7 +127,8 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.4 }}
                 >
-                  Practice real interview questions & get instant feedback from our advanced AI interviewer
+                  Practice real interview questions & get instant feedback from
+                  our advanced AI interviewer
                 </motion.p>
 
                 <motion.div
@@ -104,7 +142,7 @@ export default function Dashboard() {
                   >
                     <Link href="/interview" className="flex items-center gap-2">
                       <Play className="w-5 h-5" />
-                      Start an Interview
+                      Create an Interview
                     </Link>
                   </Button>
                 </motion.div>
@@ -129,26 +167,32 @@ export default function Dashboard() {
           </div>
         </motion.section>
 
-        {/* Your Interviews Section */}
+        {/* Your Interviews Section - Combined Created + Taken */}
         <motion.section
           className="mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <div className="flex items-center gap-3 mb-4 ml-4">
-            <h2 className="text-3xl font-bold text-white">Your Interview History</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <User className="w-6 h-6 text-green-400" />
+              <h2 className="text-3xl font-bold text-white">Your Interviews</h2>
+              <span className="text-white/50 text-sm">
+                ({yourInterviews.length} total)
+              </span>
+            </div>
           </div>
-          
+
           <div className="interviews-section">
-            {loadingUser ? (
+            {loadingUser || loadingLatest ? (
               <div className="interviews-section">
                 <SkeletonInterviewCard />
                 <SkeletonInterviewCard />
                 <SkeletonInterviewCard />
               </div>
-            ) : hasPastInterviews ? (
-              userInterviews.map((interview: any, index: number) => (
+            ) : hasYourInterviews ? (
+              yourInterviews.map((interview: any, index: number) => (
                 <motion.div
                   key={interview.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -157,7 +201,8 @@ export default function Dashboard() {
                 >
                   <InterviewCard
                     {...interview}
-                    feedback={feedbackMap[interview.id]}
+                    feedback={feedbackMap[interview.id] || null}
+                    showBadge={interview.isCreated ? "created" : "taken"}
                   />
                 </motion.div>
               ))
@@ -168,9 +213,26 @@ export default function Dashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6 }}
               >
-                <Calendar className="w-12 h-12 text-white/40 mx-auto mb-4" />
-                <p className="text-white/70 text-lg">You haven't taken any interviews yet</p>
-                <p className="text-white/50 text-sm mt-2">Start your first interview to see your progress here</p>
+                <User className="w-12 h-12 text-white/40 mx-auto mb-4" />
+                <p className="text-white/70 text-lg">No interviews yet</p>
+                <p className="text-white/50 text-sm mt-2">
+                  Create your first interview or take one from available
+                  interviews
+                </p>
+                <div className="flex gap-3 justify-center mt-4">
+                  <Button
+                    asChild
+                    className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-300"
+                  >
+                    <Link
+                      href="/create-interview"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Create Interview
+                    </Link>
+                  </Button>
+                </div>
               </motion.div>
             )}
           </div>
@@ -182,11 +244,16 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <div className="flex items-center gap-3 mb-8">
-            <Sparkles className="w-6 h-6 text-purple-400" />
-            <h2 className="text-3xl font-bold text-white">Available Interviews</h2>
+          <div className="flex items-center gap-3 mb-6">
+            <BookOpen className="w-6 h-6 text-blue-400" />
+            <h2 className="text-3xl font-bold text-white">
+              Available Interviews
+            </h2>
+            <span className="text-white/50 text-sm">
+              ({availableInterviews.length} available)
+            </span>
           </div>
-          
+
           <div className="interviews-section">
             {loadingLatest ? (
               <motion.div
@@ -199,13 +266,19 @@ export default function Dashboard() {
                   <motion.div
                     className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full"
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                   />
-                  <p className="text-white/70">Loading interviews...</p>
+                  <p className="text-white/70">
+                    Loading available interviews...
+                  </p>
                 </div>
               </motion.div>
-            ) : hasUpcomingInterviews ? (
-              allInterviews.map((interview: any, index: number) => (
+            ) : hasAvailableInterviews ? (
+              availableInterviews.map((interview: any, index: number) => (
                 <motion.div
                   key={interview.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -214,7 +287,8 @@ export default function Dashboard() {
                 >
                   <InterviewCard
                     {...interview}
-                    feedback={feedbackMap[interview.id] || null}
+                    feedback={null}
+                    showBadge="available"
                   />
                 </motion.div>
               ))
@@ -225,9 +299,13 @@ export default function Dashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6 }}
               >
-                <Brain className="w-12 h-12 text-white/40 mx-auto mb-4" />
-                <p className="text-white/70 text-lg">No interviews available at the moment</p>
-                <p className="text-white/50 text-sm mt-2">Check back later for new interview opportunities</p>
+                <BookOpen className="w-12 h-12 text-white/40 mx-auto mb-4" />
+                <p className="text-white/70 text-lg">
+                  No interviews available at the moment
+                </p>
+                <p className="text-white/50 text-sm mt-2">
+                  Check back later for new interview opportunities
+                </p>
               </motion.div>
             )}
           </div>
